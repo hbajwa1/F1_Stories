@@ -1,13 +1,30 @@
 library(f1dataR)
 library(tidyverse)
+library(ggtext)
 
 # 1. Load 2025 Constructor Standings
-# This tells the story of who dominated the 'Ground Effect' era
-standings_2025 <- load_standings(season = 2025) %>%
-  pluck("constructor_standings") # Extract the relevant table
+standings_2025 <- load_standings(season = 2025, type = "constructor")
+
+standings_2025 <- standings_2025 %>%
+  mutate(constructor_id = factor(constructor_id),
+         points = as.numeric(points))
+
+# 2. Get Team Colors & Logo URLs
+team_info <- standings_2025 %>%
+  distinct(constructor_id) %>%
+  mutate(
+    team_color = map_chr(constructor_id, ~get_team_color(.x, season = 2025)),
+    # Create an HTML string for the logo. Adjust 'width' as needed.
+    logo_label = paste0("<img src='",
+                        # We use the team's official ID to find logos (usually on Ergast/F1 servers)
+                        "https://raw.githubusercontent.com/f1db/f1db/main/data/constructors/",
+                        constructor_id, "/logo.svg' width='25'/><br>",
+                        constructor_id)
+  )
 
 # 2. Create baseline visualization of manufacturer standings
-baseline_plot <- ggplot(standings_2025, aes(x = reorder(constructor_name, points), y = points, fill = constructor_name)) +
+base_line_plot <- standings_2025 %>%
+  ggplot(aes(x = fct_reorder(constructor_id, points), y = points)) +
   geom_col() +
   coord_flip() +
   theme_minimal() +
