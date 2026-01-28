@@ -33,15 +33,20 @@ tech_index <- master_history %>%
     season == 2023 ~ 0.2,
     season == 2024 ~ 0.3,
     season == 2025 ~ 0.4
+    )) %>%
 
-  ))
-
-  # Step (d): Average gap from pole for each team
-  group_by(season, constructor_id) %>%
+  # Step (e): Calculate weighted rankings of constructors (2022-2025)
+  group_by(constructor_id) %>%
   summarise(
-    team_avg_quali_gap = mean(gap_from_pole),
-    .groups = "drop"
-  )
+    team_avg_gap_pole = sum(gap_from_pole * year_weights, na.rm = TRUE) / sum(year_weights, na.rm = TRUE)
+  ) %>%
+  arrange(team_avg_gap_pole)
+
+
+
+
+
+
 
 
 
