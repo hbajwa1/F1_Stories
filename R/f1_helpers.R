@@ -48,9 +48,9 @@ build_master_season_data <- function(season_year) {
       quali <- load_quali(season = season_year, round = r) %>%
         rowwise() %>%
         # Calculate driver's theoretical best lap
-        mutate(best_time_sec = min(c(q1_sec, q2_sec, q3_sec), na.rm = TRUE)) %>%
+        mutate(best_quali_time = min(c(q1_sec, q2_sec, q3_sec), na.rm = TRUE)) %>%
         ungroup() %>%
-        select(driver_id, best_time_sec)
+        select(driver_id, best_quali_time)
 
       # Merge Results and Quali on driver_id
       round_data <- results %>%
