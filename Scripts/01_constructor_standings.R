@@ -27,6 +27,15 @@ tech_index <- master_history %>%
   # Step (c): Identify percentage gap of each team from best qualifying time
   mutate(gap_from_pole = ((team_best_quali/pole_time) - 1)) %>%
 
+  # Step (d): Apply weights to make more recent performance account for more
+  mutate(year_weights = case_when(
+    season == 2022 ~ 0.1,
+    season == 2023 ~ 0.2,
+    season == 2024 ~ 0.3,
+    season == 2025 ~ 0.4
+
+  ))
+
   # Step (d): Average gap from pole for each team
   group_by(season, constructor_id) %>%
   summarise(
