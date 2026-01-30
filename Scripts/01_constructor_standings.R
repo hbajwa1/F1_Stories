@@ -27,14 +27,13 @@ if (file.exists(file_path)) {
 
   if (!dir.exists("data")) dir.create("data") # Ensure directory exists
   write_csv(raw_history, file_path)
+  message(glue::glue("💾 Data saved to {file_path}"))
 
 }
 
 # Implementing translation table to clean names
 master_history <- raw_history %>%
   apply_constructor_mapping()
-
-message(glue::glue("💾 Data saved to {file_path}"))
 
 # --- 2. CALCULATE THE TECHNICAL INDEX ---
 tech_index <- master_history %>%
