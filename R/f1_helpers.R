@@ -6,7 +6,7 @@
 #' Apply the mapping to a whole dataframe at once
 apply_constructor_mapping <- function(data) {
   # 1. Load the mapping file once
-  mapping <- readr::read_csv("data/constructor_mapping.csv", show_col_types = FALSE)
+  mapping <- readr::read_csv("data/manufacturer_driver_translation_table.csv", show_col_types = FALSE)
 
   # 2. Join the mapping to your data
   # This replaces the need for a loop/rowwise function
