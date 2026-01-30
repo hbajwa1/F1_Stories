@@ -16,20 +16,25 @@ file_path <- file.path("data", file_name)
 if (file.exists(file_path)) {
 
   message(glue::glue("✅ Local cache found: {file_name}. Reading file..."))
-  master_history <- read_csv(file_path, show_col_types = FALSE)
+  raw_history <- read_csv(file_path, show_col_types = FALSE)
 
 } else {
 
   message("🌐 No local cache found. Fetching data from Ergast API (this may take a minute)...")
 
   # Run master data builder function
-  master_history <- map_dfr(years_to_analyze, build_master_season_data)
+  raw_history <- map_dfr(years_to_analyze, build_master_season_data)
 
   if (!dir.exists("data")) dir.create("data") # Ensure directory exists
-  write_csv(master_history, file_path)
+  write_csv(raw_history, file_path)
 
-  message(glue::glue("💾 Data fetched and saved to {file_path}"))
 }
+
+# Implementing translation table to clean names
+master_history <- raw_history %>%
+  apply_constructor_mapping()
+
+message(glue::glue("💾 Data saved to {file_path}"))
 
 # --- 2. CALCULATE THE TECHNICAL INDEX ---
 tech_index <- master_history %>%
@@ -39,7 +44,7 @@ tech_index <- master_history %>%
   mutate(pole_time = min(best_quali_time, na.rm = TRUE)) %>%
 
   # Step (b): Identify best qualifying team by team
-  group_by(season, round, constructor_id) %>%
+  group_by(season, round, constructor_id, clean_team_name) %>%
   summarise(
     team_best_quali = min(best_quali_time, na.rm = TRUE),
     pole_time = first(pole_time),
@@ -58,9 +63,10 @@ tech_index <- master_history %>%
     )) %>%
 
   # Step (e): Calculate weighted rankings of constructors (2022-2025)
-  group_by(constructor_id) %>%
+  group_by(constructor_id, clean_team_name) %>%
   summarise(
-    team_avg_gap_pole = sum(gap_from_pole * year_weights, na.rm = TRUE) / sum(year_weights, na.rm = TRUE)
+    team_avg_gap_pole = sum(gap_from_pole * year_weights, na.rm = TRUE) / sum(year_weights, na.rm = TRUE),
+    .groups = "drop"
   ) %>%
   arrange(team_avg_gap_pole)
 
