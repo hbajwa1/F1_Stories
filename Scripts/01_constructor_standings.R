@@ -9,6 +9,8 @@ source("R/f1_helpers.R")
 years_to_analyze <- c(2022, 2023, 2024, 2025)
 master_history <- map_dfr(years_to_analyze, build_master_season_data)
 
+write_csv(master_history, "data/f1_results.csv")
+
 # --- 2. CALCULATE THE TECHNICAL INDEX ---
 tech_index <- master_history %>%
 
