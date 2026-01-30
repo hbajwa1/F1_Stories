@@ -1,24 +1,29 @@
-# R/f1_helpers.R
+#::::::::::::::::::::::::::::::::::::::::::::#
+#           Helper functions
+#::::::::::::::::::::::::::::::::::::::::::::#
 
-#' Translation tables for Constructors and Drivers
-#'
-#' @param id The ID from Ergast/f1dataR
-#' @param season The year of the competition
-#' @param target_type Either 'fastf1' or 'clean_name'
-translate_constructor <- function(id, season, target_type = "clean_name") {
-  # Load the mapping file
+#' Efficient Constructor Translation
+#' Apply the mapping to a whole dataframe at once
+apply_constructor_mapping <- function(data) {
+  # 1. Load the mapping file once
   mapping <- readr::read_csv("data/constructor_mapping.csv", show_col_types = FALSE)
 
-  # Filter for the specific season and ID
-  match <- mapping %>%
-    filter(season == !!season, ergast_id == !!id)
-
-  if (nrow(match) > 0) {
-    return(match[[target_type]])
-  } else {
-    # If no match found, just clean up the ID (fallback)
-    return(stringr::str_to_title(gsub("_", " ", id)))
-  }
+  # 2. Join the mapping to your data
+  # This replaces the need for a loop/rowwise function
+  data %>%
+    left_join(
+      mapping %>% select(season, ergast_id, clean_name),
+      by = c("season" = "season", "constructor_id" = "ergast_id")
+    ) %>%
+    mutate(
+      # Fallback: If clean_name is NA (not in mapping), use the cleaned ID
+      clean_team_name = if_else(
+        is.na(clean_name),
+        stringr::str_to_title(gsub("_", " ", constructor_id)),
+        clean_name
+      )
+    ) %>%
+    select(-clean_name) # Remove the join artifact
 }
 
 #################################################################
