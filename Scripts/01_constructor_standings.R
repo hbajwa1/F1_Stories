@@ -7,9 +7,29 @@ source("R/f1_helpers.R")
 
 # --- 1. BUILD THE HISTORICAL MASTER FILE ---
 years_to_analyze <- c(2022, 2023, 2024, 2025)
-master_history <- map_dfr(years_to_analyze, build_master_season_data)
+start_yr <- min(years_to_analyze)
+end_yr <- max(years_to_analyze)
 
-write_csv(master_history, "data/f1_results.csv")
+file_name <- glue::glue("f1_results_{start_yr}_{end_yr}.csv")
+file_path <- file.path("data", file_name)
+
+if (file.exists(file_path)) {
+
+  message(glue::glue("✅ Local cache found: {file_name}. Reading file..."))
+  master_history <- read_csv(file_path, show_col_types = FALSE)
+
+} else {
+
+  message("🌐 No local cache found. Fetching data from Ergast API (this may take a minute)...")
+
+  # Run master data builder function
+  master_history <- map_dfr(years_to_analyze, build_master_season_data)
+
+  if (!dir.exists("data")) dir.create("data") # Ensure directory exists
+  write_csv(master_history, file_path)
+
+  message(glue::glue("💾 Data fetched and saved to {file_path}"))
+}
 
 # --- 2. CALCULATE THE TECHNICAL INDEX ---
 tech_index <- master_history %>%
