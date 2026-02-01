@@ -1,9 +1,14 @@
-season,ergast_id,fastf1_id,clean_name
-2024,rb,RB,Racing Bulls
-2025,rb,RB,Racing Bulls
-2024,sauber,Sauber,Sauber
-2025,sauber,Sauber,Sauber
-2025,red_bull,Red Bull Racing,Red Bull
-2025,aston_martin,Aston Martin,Aston Martin
-2023,alphatauri,alphatauri,Racing Bulls
-2023,alfa,Alfa,Sauber
+ergast_id,clean_name
+red_bull,Red Bull
+mclaren,McLaren
+ferrari,Ferrari
+mercedes,Mercedes
+aston_martin,Aston Martin
+alpine,Alpine
+hass,Haas
+williams,Williams
+rb,Racing Bulls
+alphatauri,Racing Bulls
+alfa,Sauber
+sauber,Sauber
+audi,Sauber
