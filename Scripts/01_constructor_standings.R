@@ -31,10 +31,6 @@ if (file.exists(file_path)) {
 
 }
 
-# Implementing translation table to clean names
-master_history <- raw_history %>%
-  apply_constructor_mapping()
-
 # --- 2. CALCULATE THE TECHNICAL INDEX ---
 tech_index <- master_history %>%
 
@@ -43,15 +39,20 @@ tech_index <- master_history %>%
   mutate(pole_time = min(best_quali_time, na.rm = TRUE)) %>%
 
   # Step (b): Identify best qualifying team by team
-  group_by(season, round, constructor_id, clean_team_name) %>%
+  group_by(season, round, constructor_id) %>%
   summarise(
     team_best_quali = min(best_quali_time, na.rm = TRUE),
     pole_time = first(pole_time),
     .groups = "drop"
   ) %>%
 
+  filter(!is.infinite(team_best_quali)) %>%
+
   # Step (c): Identify percentage gap of each team from best qualifying time
   mutate(gap_from_pole = ((team_best_quali/pole_time) - 1)) %>%
+
+  # Step (d): Clean manufacturer names using translation table
+  apply_constructor_mapping() %>%
 
   # Step (d): Apply weights to make more recent performance account for more
   mutate(year_weights = case_when(
@@ -62,15 +63,23 @@ tech_index <- master_history %>%
     )) %>%
 
   # Step (e): Calculate weighted rankings of constructors (2022-2025)
-  group_by(constructor_id, clean_team_name) %>%
+  group_by(clean_name) %>%
   summarise(
     team_avg_gap_pole = sum(gap_from_pole * year_weights, na.rm = TRUE) / sum(year_weights, na.rm = TRUE),
     .groups = "drop"
   ) %>%
   arrange(team_avg_gap_pole)
 
+# --- 3. VISUALIZE MANUFACTURING RANKINGS ---
 
+tech_index %>%
+  mutate(ranking_diff = (team_avg_gap_pole - team_avg_gap_pole[1])*100) %>%
 
+  ggplot(aes(x = reorder(clean_name, -ranking_diff), y =ranking_diff)) +
+  geom_col() +
+  coord_flip() +
+  ylab("Average relative gap to leader (%)") + xlab("") +
+  ggtitle("F1 Manufacturer Performance (2022-2025)")
 
 
 
