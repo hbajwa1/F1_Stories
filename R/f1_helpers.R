@@ -2,30 +2,6 @@
 #           Helper functions
 #::::::::::::::::::::::::::::::::::::::::::::#
 
-#' Efficient Constructor Translation
-#' Apply the mapping to a whole dataframe at once
-apply_constructor_mapping <- function(data) {
-  # 1. Load the mapping file once
-  mapping <- readr::read_csv("data/manufacturer_driver_translation_table.csv", show_col_types = FALSE)
-
-  # 2. Join the mapping to your data
-  # This replaces the need for a loop/rowwise function
-  data %>%
-    left_join(
-      mapping %>% select(season, ergast_id, clean_name),
-      by = c("season" = "season", "constructor_id" = "ergast_id")
-    ) %>%
-    mutate(
-      # Fallback: If clean_name is NA (not in mapping), use the cleaned ID
-      clean_team_name = if_else(
-        is.na(clean_name),
-        stringr::str_to_title(gsub("_", " ", constructor_id)),
-        clean_name
-      )
-    ) %>%
-    select(-clean_name) # Remove the join artifact
-}
-
 #################################################################
 
 #' Build a Master Data Frame for an F1 Season
@@ -75,3 +51,19 @@ build_master_season_data <- function(season_year) {
 
   return(final_master)
 }
+
+#################################################################
+
+#' Efficient Constructor Translation
+#' Apply the mapping to a whole dataframe at once
+apply_constructor_mapping <- function(data) {
+  # 1. Load the mapping file once
+  mapping <- readr::read_csv("data/manufacturer_driver_translation_table.csv", show_col_types = FALSE)
+
+  # 2. Join the mapping to your data
+  # This replaces the need for a loop/rowwise function
+  data %>%
+    left_join(mapping, by = c("constructor_id"),
+              relationship = "many-to-one")
+}
+
