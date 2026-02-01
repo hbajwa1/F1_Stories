@@ -38,7 +38,8 @@ build_master_season_data <- function(season_year) {
 
   # 1. Load Schedule (Track Info)
   sched <- load_schedule(season = season_year) %>%
-    mutate(season = as.numeric(season_year)) %>%
+    mutate(season = as.numeric(season_year),
+           round = as.numeric(round)) %>%
     # Select only the rounds that have already occurred
     filter(as.Date(date) < Sys.Date())
 
@@ -59,7 +60,8 @@ build_master_season_data <- function(season_year) {
 
       # Merge Results and Quali on driver_id
       round_data <- results %>%
-        left_join(quali, by = "driver_id") %>%
+        left_join(quali, by = "driver_id",
+                  relationship = "one-to-one") %>%
         mutate(season = season_year, round = r)
 
       return(round_data)
@@ -68,7 +70,8 @@ build_master_season_data <- function(season_year) {
 
   # 3. Final Join with Schedule (Circuit Name, Date, etc.)
   final_master <- master_df %>%
-    left_join(sched, by = c("season", "round"))
+    left_join(sched, by = c("season", "round"),
+              relationship = "many-to-one")
 
   return(final_master)
 }
