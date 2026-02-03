@@ -1,28 +1,86 @@
 
-# F1 Stories: Data-Driven Narratives
+# 🏎️ F1 Data Stories: Decoding the 2026 Regulation Shift
 
-<!-- badges: start -->
+![R](https://img.shields.io/badge/R-276DC3?style=for-the-badge&logo=r&logoColor=white)
+![F1](https://img.shields.io/badge/Formula%201-E10600?style=for-the-badge&logo=f1&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge)
 
-<!-- badges: end -->
+> **“Data doesn’t just tell us who won; it tells us *why*.”**
 
-This project is a deep dive into Formula 1 telemetry and results, with a
-specific focus on the 2026 Technical Revolution. While many look at the
-standings, “F1 Stories” looks at the “why.”
+## 📖 Project Overview
 
-## Key Research Questions:
+**F1 Data Stories** is a longitudinal analysis project designed to
+bridge the gap between raw telemetry and narrative storytelling. While
+traditional standings tell us who scored the most points, this project
+digs deeper into the **engineering reality** underneath the results.
 
-- The Hybrid Shift: How does the 50/50 ICE-to-Electric power split
-  change driver throttle application?
+As the sport approaches the massive **2026 Technical Regulations**
+(active aerodynamics, 50/50 power split), accurate historical
+benchmarking is critical. This repository establishes a rigorous
+**Technical Competency Baseline** for the current “Ground Effect” era
+(2022-2025), allowing us to measure exactly how much the competitive
+order reshuffles when the new rules drop.
 
-- The Aero Game: Visualizing the impact of active aerodynamics on
-  straight-line speed.
+------------------------------------------------------------------------
 
-- The Teammate Duel: Who is winning the internal battle when the car is
-  a “black box” of new regulations?
+## 🔬 The Methodology: Defining “Technical Competency”
 
-## 2025 Performance Baseline
+To understand who is truly winning the engineering war, we must look
+beyond the Championship Points. Points can be influenced by luck,
+strategy errors, or reliability issues. Instead, we aim to measure
+**Pure Car Performance**.
 
-Before diving into the 2026 data, we establish a baseline using the
-final standings of the 2025 season.
+### 1. The Metric: Qualifying “Supertimes”
 
-![](man/figures/README-baseline_plot-1.png)<!-- -->
+We utilize **Qualifying Pace** as our primary indicator of technical
+competency. \* **Why Qualifying?** Race results are noisy. They are
+polluted by traffic, tire management, and safety cars. Qualifying
+represents the **theoretical maximum performance** of the machine over a
+single lap, stripped of external variables. \* **The Calculation:** For
+every Grand Prix from 2022 to 2025, we identify the **Pole Position
+time** (100.000%) and calculate every other team’s percentage deficit to
+that benchmark.
+
+$$\text{Gap \%} = \left( \frac{\text{Team Best Time}}{\text{Pole Time}} - 1 \right) \times 100$$
+
+*Note: We take the fastest time between a team’s two drivers to
+represent the chassis’s true potential. Wet sessions are filtered out to
+preserve data integrity.*
+
+### 2. The Weighting: Engineering Momentum
+
+A simple average of the last 4 years would be misleading. In Formula 1,
+car development is iterative. The car a team fields in 2025 is a direct
+evolution of their 2024 chassis, which evolved from 2023.
+
+To account for this **recency bias** and **engineering momentum**, we
+apply a **Weighted Moving Average** to the performance deficits:
+
+| Season | Weight | Rationale |
+|:---|:---|:---|
+| **2025** | **40%** | **Current State of the Art:** Represents current wind tunnel correlation and staff quality. |
+| **2024** | **30%** | **Immediate Foundation:** The direct predecessor to the current car. |
+| **2023** | **20%** | **Legacy Knowledge:** The team’s grasp of the core regulation concepts. |
+| **2022** | **10%** | **Origins:** The team’s initial adaptation to ground effect physics. |
+
+This formula yields the **Technical Competency Index**—a single number
+representing a team’s expected performance deficit entering the new era.
+
+$$\text{Index} = \frac{\sum (\text{Gap} \times \text{Weight})}{\sum \text{Weight}}$$
+
+------------------------------------------------------------------------
+
+## 📊 The Baseline: 2022-2025 Era Performance
+
+Below is the **Technical Competency Index**. It ranks every constructor
+based on their weighted average qualifying gap to the field leader.
+
+**The Zero Line (Baseline):** The team at `0.0` represents the “Gold
+Standard” of the era. Every other bar represents the pure engineering
+deficit to that standard.
+
+<figure>
+<img src="output/constructor_standings/season_2022_2025.png"
+alt="Technical Competency Index" />
+<figcaption aria-hidden="true">Technical Competency Index</figcaption>
+</figure>
