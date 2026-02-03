@@ -63,7 +63,7 @@ tech_index <- master_history %>%
     )) %>%
 
   # Step (e): Calculate weighted rankings of constructors (2022-2025)
-  group_by(clean_name) %>%
+  group_by(clean_name, team_color) %>%
   summarise(
     team_avg_gap_pole = sum(gap_from_pole * year_weights, na.rm = TRUE) / sum(year_weights, na.rm = TRUE),
     .groups = "drop"
@@ -72,15 +72,12 @@ tech_index <- master_history %>%
 
 # --- 3. VISUALIZE MANUFACTURING RANKINGS ---
 
-# Define official F1 Team Colors (Hex Codes)
-f1_colors <- c(
-
 tech_index %>%
   mutate(ranking_diff = (team_avg_gap_pole - team_avg_gap_pole[1])*100) %>%
 
-  ggplot(aes(x = reorder(clean_name, -ranking_diff), y =ranking_diff, fill = clean_name)) +
-  geom_col(show.legend = FALSE) +
-  #scale_fill_manual(values = f1_colors) +
+  ggplot(aes(x = reorder(clean_name, -ranking_diff), y =ranking_diff, fill = team_color)) +
+  geom_col() +
+  scale_fill_identity() +
   coord_flip() +
   theme_dark_f1() +
   labs (
@@ -89,13 +86,19 @@ tech_index %>%
     x = "Constructor",
     y = "Average relative gap to leader (Percentage Points)",
     caption = "Data: f1dataR"
+  ) +
+  theme(
+    axis.text.y = element_text(color = "white"),
+    axis.text.x = element_text(color = "white"),
+    axis.line.y = element_line(color = "white", linewidth = 0.5),
+    axis.title.x = element_text(color = "white", margin = margin(t = 10))
   )
 
 # 3. Save it to your output folder
-ggsave(glue("output/constructor_standings/season_{target_season}.png"), constructor_points)
+ggsave(glue("output/constructor_standings/season_{start_yr}_{end_yr}.png"), constructor_ranking)
 
 # Overwrite the 'latest' version for the README
-ggsave("output/latest_standings.png", constructor_points)
+ggsave("output/latest_standings.png", constructor_ranking)
 
 
 
