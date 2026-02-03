@@ -16,17 +16,17 @@ file_path <- file.path("data", file_name)
 if (file.exists(file_path)) {
 
   message(glue::glue("✅ Local cache found: {file_name}. Reading file..."))
-  raw_history <- read_csv(file_path, show_col_types = FALSE)
+  master_history <- read_csv(file_path, show_col_types = FALSE)
 
 } else {
 
   message("🌐 No local cache found. Fetching data from Ergast API (this may take a minute)...")
 
   # Run master data builder function
-  raw_history <- map_dfr(years_to_analyze, build_master_season_data)
+  master_history <- map_dfr(years_to_analyze, build_master_season_data)
 
   if (!dir.exists("data")) dir.create("data") # Ensure directory exists
-  write_csv(raw_history, file_path)
+  write_csv(master_history, file_path)
   message(glue::glue("💾 Data saved to {file_path}"))
 
 }
@@ -72,16 +72,30 @@ tech_index <- master_history %>%
 
 # --- 3. VISUALIZE MANUFACTURING RANKINGS ---
 
+# Define official F1 Team Colors (Hex Codes)
+f1_colors <- c(
+
 tech_index %>%
   mutate(ranking_diff = (team_avg_gap_pole - team_avg_gap_pole[1])*100) %>%
 
-  ggplot(aes(x = reorder(clean_name, -ranking_diff), y =ranking_diff)) +
-  geom_col() +
+  ggplot(aes(x = reorder(clean_name, -ranking_diff), y =ranking_diff, fill = clean_name)) +
+  geom_col(show.legend = FALSE) +
+  #scale_fill_manual(values = f1_colors) +
   coord_flip() +
-  ylab("Average relative gap to leader (%)") + xlab("") +
-  ggtitle("F1 Manufacturer Performance (2022-2025)")
+  theme_dark_f1() +
+  labs (
+    title = "F1 Manufacturer Performance (2022-2025)",
+    subtitle = "This figure shows percentage gap of each team to the field leader in qualifying pace",
+    x = "Constructor",
+    y = "Average relative gap to leader (Percentage Points)",
+    caption = "Data: f1dataR"
+  )
 
+# 3. Save it to your output folder
+ggsave(glue("output/constructor_standings/season_{target_season}.png"), constructor_points)
 
+# Overwrite the 'latest' version for the README
+ggsave("output/latest_standings.png", constructor_points)
 
 
 
