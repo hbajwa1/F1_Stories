@@ -1,14 +1,14 @@
-constructor_id,clean_name
-red_bull,Red Bull
-mclaren,McLaren
-ferrari,Ferrari
-mercedes,Mercedes
-aston_martin,Aston Martin
-alpine,Alpine
-haas,Haas
-williams,Williams
-rb,Racing Bulls
-alphatauri,Racing Bulls
-alfa,Sauber
-sauber,Sauber
-audi,Sauber
+constructor_id,clean_name,team_color
+red_bull,Red Bull,#3671C6
+mclaren,McLaren,#FF8000
+ferrari,Ferrari,#F91536
+mercedes,Mercedes,#27F4D2
+aston_martin,Aston Martin,#229971
+alpine,Alpine,#0093CC
+haas,Haas,#B6BABD
+williams,Williams,#64C4FF
+rb,Racing Bulls,#6692FF
+alphatauri,Racing Bulls,#6692FF
+alfa,Sauber,#52E252
+sauber,Sauber,#52E252
+audi,Sauber,#52E252
