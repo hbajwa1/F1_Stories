@@ -97,8 +97,6 @@ constructor_ranking <- tech_index %>%
 # 3. Save it to your output folder
 ggsave(glue("output/constructor_standings/season_{start_yr}_{end_yr}.png"), constructor_ranking)
 
-# Overwrite the 'latest' version for the README
-ggsave("output/latest_standings.png", constructor_ranking)
 
 
 
