@@ -72,7 +72,7 @@ tech_index <- master_history %>%
 
 # --- 3. VISUALIZE MANUFACTURING RANKINGS ---
 
-tech_index %>%
+constructor_ranking <- tech_index %>%
   mutate(ranking_diff = (team_avg_gap_pole - team_avg_gap_pole[1])*100) %>%
 
   ggplot(aes(x = reorder(clean_name, -ranking_diff), y =ranking_diff, fill = team_color)) +
