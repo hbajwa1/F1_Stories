@@ -1,123 +1,179 @@
 library(shiny)
 library(bslib)
 library(tidyverse)
-library(f1dataR)
+library(bsicons) # For the nice summary icons
 
-# --- 1. GLOBAL SETUP (Data Loading) ---
-# In the future, we will load your "master_history.rds" here.
-# For now, I'll create dummy lists to populate the dropdowns.
-all_drivers <- c("Max Verstappen", "Lewis Hamilton", "Fernando Alonso", "Lando Norris")
-all_teams <- c("Red Bull", "Mercedes", "Ferrari", "McLaren", "Aston Martin")
-all_circuits <- c("Bahrain", "Monaco", "Silverstone", "Spa-Francorchamps")
+# --- 1. MOCK DATA (To make the prototype work immediately) ---
+# In production, you will load "data/dashboard_ready.rds" here
+drivers_list <- c("Max Verstappen", "Lewis Hamilton", "Charles Leclerc")
+teams_list <- c("Red Bull", "Mercedes", "Ferrari", "McLaren")
+tracks_list <- c("Global Summary" = "all", "Silverstone" = "silverstone", "Monaco" = "monaco")
 
-# --- 2. USER INTERFACE (The Sketch) ---
-ui <- page_sidebar(
-  title = "🏎️ F1 Stories Dashboard",
-  theme = bs_theme(bootswatch = "darkly"), # Matches your dark theme aesthetic
+# --- 2. USER INTERFACE ---
+ui <- page_fillable(
+  theme = bs_theme(bootswatch = "darkly"),
 
-  # A. The Sidebar Menu (Left in your sketch)
-  sidebar = sidebar(
-    title = "Navigation",
-    actionButton("btn_overview", "Overview", icon = icon("tachometer-alt")),
-    actionButton("btn_analysis", "Analyses", icon = icon("chart-line")),
-    "---",
-    helpText("Select a category to explore historical performance.")
+  # Title / Header
+  div(class = "d-flex justify-content-between align-items-center mb-3",
+      h2("🏎️ F1 Performance Dashboard"),
+      span("Data: 2022-2025 Ground Effect Era", class = "text-muted")
   ),
 
-  # B. The Main Canvas
-  # We use a 'conditionalPanel' or logic to swap views.
-  # For now, we focus on the "Overview" you drew.
+  # THE MAIN GRID LAYOUT (Matches your Sketch)
+  layout_columns(
+    col_widths = c(8, 4), # Left column wider (Graph + Map), Right column narrower (Controls + Stats)
+    row_heights = c(1, 2), # Top row shorter, bottom row taller
 
-  tagList(
-    h2("Overview: Historical Statistics"),
-
-    # --- ROW 1: DRIVER SECTION ---
+    # --- QUADRANT 1 (Top Left): TRACK CONTEXT ---
     card(
-      card_header("Driver Performance"),
+      card_header("Track Context"),
       layout_sidebar(
         sidebar = sidebar(
-          width = 300,
-          selectInput("driver_select", "Select Driver:", choices = all_drivers),
-          helpText("Compare career baselines.")
+          open = "always", width = "40%",
+          selectInput("track_select", "Select Circuit:", choices = tracks_list, selected = "all"),
+          helpText("Select 'Global Summary' to see career stats, or a specific track to drill down.")
         ),
-        # The Output Area (Right side of your arrow)
-        layout_column_wrap(
-          width = 1/3,
-          value_box(title = "Championships", value = textOutput("drv_champs"), showcase = icon("trophy")),
-          value_box(title = "Race Wins", value = textOutput("drv_wins"), showcase = icon("flag-checkered")),
-          value_box(title = "Avg Ranking", value = "3.2", showcase = icon("chart-bar"))
+        # The Track Map acts as the visual anchor here
+        card_body(
+          plotOutput("track_map_plot", height = "100%")
         )
       )
     ),
 
-    # --- ROW 2: MANUFACTURER SECTION ---
+    # --- QUADRANT 2 (Top Right): SUBJECT SELECTION ---
     card(
-      card_header("Manufacturer Performance"),
-      layout_sidebar(
-        sidebar = sidebar(
-          width = 300,
-          selectInput("team_select", "Select Manufacturer:", choices = all_teams)
-        ),
-        layout_column_wrap(
-          width = 1/3,
-          value_box(title = "Championships", value = textOutput("team_champs"), showcase = icon("trophy")),
-          value_box(title = "Race Wins", value = "102", showcase = icon("flag-checkered")),
-          value_box(title = "Seasons in F1", value = "74", showcase = icon("calendar"))
-        )
-      )
+      card_header("Subject Selection"),
+      # The "Mode Switch" (Driver vs Team)
+      radioButtons("analysis_mode", NULL,
+                   choices = c("Driver", "Manufacturer"),
+                   selected = "Driver",
+                   inline = TRUE),
+      # The Dynamic Dropdown (Updates based on mode)
+      selectInput("subject_select", "Select Name:", choices = drivers_list)
     ),
 
-    # --- ROW 3: CIRCUIT SECTION ---
+    # --- QUADRANT 3 (Bottom Left): RANKING GRAPH ---
     card(
-      card_header("Circuit History"),
-      layout_sidebar(
-        sidebar = sidebar(
-          width = 300,
-          selectInput("circuit_select", "Select Circuit:", choices = all_circuits)
+      full_screen = TRUE,
+      card_header(textOutput("graph_title")), # Dynamic Title
+      plotOutput("ranking_plot", height = "100%")
+    ),
+
+    # --- QUADRANT 4 (Bottom Right): SUMMARY STATS ---
+    card(
+      card_header("Performance Profile"),
+      # Using value_box for big numbers (Wins, Championships)
+      layout_column_wrap(
+        width = 1,
+        value_box(
+          title = "Total Wins",
+          value = textOutput("stat_wins"),
+          showcase = bs_icon("trophy-fill"),
+          theme = "primary"
         ),
-        layout_columns(
-          # Column 1: The Stats
-          card_body(
-            h5("Track Records"),
-            p(strong("Fastest Lap:"), "1:18.442 (Hamilton, 2020)"),
-            p(strong("First Race:"), "1950"),
-            p(strong("Fastest Quali Pace:"), "1:17.300")
-          ),
-          # Column 2: The Map Image
-          card_body(
-            plotOutput("circuit_map", height = "200px")
-          )
+        value_box(
+          title = "Avg Finish",
+          value = textOutput("stat_avg_finish"),
+          showcase = bs_icon("flag-fill"),
+          theme = "secondary"
+        ),
+        value_box(
+          title = "Seasons Active",
+          value = textOutput("stat_seasons"),
+          showcase = bs_icon("calendar-event")
         )
       )
     )
   )
 )
 
-# --- 3. SERVER LOGIC (The Brains) ---
+# --- 3. SERVER LOGIC ---
 server <- function(input, output, session) {
 
-  # Reactive: Calculate Driver Stats
-  # (This is where we will hook up your 'master_history' data later)
-  output$drv_champs <- renderText({
-    # Placeholder logic
-    if(input$driver_select == "Max Verstappen") return("3")
-    if(input$driver_select == "Lewis Hamilton") return("7")
-    return("0")
+  # A. DYNAMIC DROPDOWN LOGIC
+  # When user toggles "Manufacturer" vs "Driver", update the list
+  observeEvent(input$analysis_mode, {
+    if (input$analysis_mode == "Driver") {
+      updateSelectInput(session, "subject_select", choices = drivers_list)
+    } else {
+      updateSelectInput(session, "subject_select", choices = teams_list)
+    }
   })
 
-  output$drv_wins <- renderText({
-    if(input$driver_select == "Max Verstappen") return("54")
-    return("32")
+  # B. PLOT TITLE LOGIC
+  output$graph_title <- renderText({
+    if (input$track_select == "all") {
+      return(paste("Yearly Championship Ranking:", input$subject_select))
+    } else {
+      return(paste("Race Results at", tools::toTitleCase(input$track_select), "-", input$subject_select))
+    }
   })
 
-  # Reactive: Draw Circuit Map
-  output$circuit_map <- renderPlot({
-    # We will use f1dataR::plot_fastest_lap() or similar here
-    ggplot() +
-      geom_text(aes(x=0.5, y=0.5, label = paste("Map of", input$circuit_select))) +
-      theme_void() +
-      theme(panel.background = element_rect(fill = "#2b2b2b", color = NA),
-            text = element_text(color = "white"))
+  # C. RANKING GRAPH LOGIC (The Core "Normalized" Graph)
+  output$ranking_plot <- renderPlot({
+    # 1. Create Dummy Data for visualization
+    years <- 2022:2025
+
+    # Logic: Is it Global or Track specific?
+    if (input$track_select == "all") {
+      # GLOBAL MODE: Plot Championship Rank (1st, 2nd, etc.)
+      # In real app: Filter data by input$subject_select
+      y_values <- sample(1:5, 4, replace = TRUE)
+      y_label <- "Championship Position"
+    } else {
+      # TRACK MODE: Plot Race Finish Position
+      y_values <- sample(1:20, 4, replace = TRUE)
+      y_label <- "Race Finishing Position"
+    }
+
+    df <- data.frame(Year = years, Rank = y_values)
+
+    # 2. Draw Plot
+    ggplot(df, aes(x = Year, y = Rank)) +
+      geom_line(color = "#E10600", linewidth = 1.2) + # F1 Red
+      geom_point(color = "white", size = 3) +
+      scale_y_reverse(breaks = 1:20) + # Rank 1 is at the top!
+      theme_dark() +
+      theme(
+        panel.background = element_rect(fill = "#222222"),
+        plot.background = element_rect(fill = "#222222", color = NA),
+        text = element_text(color = "white"),
+        axis.text = element_text(color = "white")
+      ) +
+      labs(y = y_label)
+  })
+
+  # D. SUMMARY STATS LOGIC
+  output$stat_wins <- renderText({
+    # Real Logic: Filter data by Subject AND Track
+    # If Track == "All", sum(wins). If Track == "Monaco", sum(wins at Monaco)
+    if (input$track_select == "all") return("103") # Mock Total
+    return("8") # Mock Track specific
+  })
+
+  output$stat_avg_finish <- renderText({
+    if (input$track_select == "all") return("3.5")
+    return("2.1")
+  })
+
+  output$stat_seasons <- renderText({
+    "12"
+  })
+
+  # E. TRACK MAP LOGIC
+  output$track_map_plot <- renderPlot({
+    if (input$track_select == "all") {
+      # If Global, maybe show a generic world map or logo
+      ggplot() +
+        geom_text(aes(x=0.5, y=0.5, label = "GLOBAL SUMMARY\n(Select a track to filter)"), color="white") +
+        theme_void()
+    } else {
+      # If Track selected, show the specific circuit shape
+      ggplot() +
+        geom_text(aes(x=0.5, y=0.5, label = paste("Map of", input$track_select)), color="white", size=6) +
+        theme_void() +
+        theme(panel.border = element_rect(color = "white", fill = NA))
+    }
   })
 }
 
