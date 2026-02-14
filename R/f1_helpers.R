@@ -24,7 +24,7 @@ build_master_season_data <- function(season_year) {
     tryCatch({
       # Load Race Results (to get the Driver <-> Constructor link)
       results <- load_results(season = season_year, round = r) %>%
-        select(driver_id, constructor_id, points, grid, position)
+        select(driver_id, constructor_id, points, grid, position, fastest_rank, top_speed_kph)
 
       # Load Qualifying Data
       quali <- load_quali(season = season_year, round = r) %>%
