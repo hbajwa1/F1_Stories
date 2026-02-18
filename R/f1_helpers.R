@@ -30,7 +30,13 @@ build_master_season_data <- function(season_year) {
       quali <- load_quali(season = season_year, round = r) %>%
         rowwise() %>%
         # Calculate driver's theoretical best lap
-        mutate(best_quali_time = min(c(q1_sec, q2_sec, q3_sec), na.rm = TRUE)) %>%
+        mutate(best_quali_time = if (season_year < 2006) {
+          # One-shot era: only look at q1
+          min(q1_sec, na.rm = TRUE)
+        } else {
+          # Modern era: look across all three sessions
+          min(c(q1_sec, q2_sec, q3_sec), na.rm = TRUE)
+        }) %>%
         ungroup() %>%
         select(driver_id, best_quali_time)
 
