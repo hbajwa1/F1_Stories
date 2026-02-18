@@ -6,30 +6,39 @@ library(ggtext)
 source("R/f1_helpers.R")
 
 # --- 1. BUILD THE HISTORICAL MASTER FILE ---
-years_to_analyze <- c(2022, 2023, 2024, 2025)
-start_yr <- min(years_to_analyze)
-end_yr <- max(years_to_analyze)
 
-file_name <- glue::glue("f1_results_{start_yr}_{end_yr}.csv")
-file_path <- file.path("data", file_name)
+if (!dir.exists("data/raw_seasons")) dir.create("data/raw_seasons", recursive = TRUE)
 
-if (file.exists(file_path)) {
+years_to_analyze <- 2015:2025
 
-  message(glue::glue("✅ Local cache found: {file_name}. Reading file..."))
-  master_history <- read_csv(file_path, show_col_types = FALSE)
+# 2. Wrap your processing function with a "Save" check
+build_and_save_season <- function(year) {
+  file_path <- paste0("data/raw_seasons/season_", year, ".rds")
 
-} else {
+  # SKIP if we already have it (saves API calls on repeat runs)
+  if (file.exists(file_path)) {
+    message(paste("Skipping", year, "- file already exists."))
+    return(readRDS(file_path))
+  }
 
-  message("🌐 No local cache found. Fetching data from Ergast API (this may take a minute)...")
+  message(paste("Processing season:", year, "..."))
 
-  # Run master data builder function
-  master_history <- map_dfr(years_to_analyze, build_master_season_data)
+  # Your existing master logic
+  season_data <- build_master_season_data(year)
 
-  if (!dir.exists("data")) dir.create("data") # Ensure directory exists
-  write_csv(master_history, file_path)
-  message(glue::glue("💾 Data saved to {file_path}"))
+  # Save the individual year immediately
+  saveRDS(season_data, file_path)
 
+  # IMPORTANT: Add a small sleep to avoid hitting the rate limit
+  Sys.sleep(2)
+
+  return(season_data)
 }
+
+# 3. Run the loop safely
+# This will now be "Restartable" - if it crashes, just run it again
+# and it will pick up exactly where it left off.
+master_history <- map_dfr(years_to_analyze, build_and_save_season)
 
 # --- 2. CALCULATE THE TECHNICAL INDEX ---
 tech_index <- master_history %>%
