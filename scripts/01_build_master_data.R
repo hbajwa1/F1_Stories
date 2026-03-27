@@ -38,4 +38,21 @@ build_and_save_season <- function(year) {
 # 3. Run the loop safely
 master_history <- map_dfr(years_to_analyze, build_and_save_season)
 
+master_history <- master_history %>%
+  mutate(points = as.numeric(points),
+         grid = as.numeric(grid),
+         position = as.numeric(position),
+         fastest_rank = as.numeric(fastest_rank),
+         top_speed_kph = as.numeric(top_speed_kph)
+         )
+
+# --- 2. BUILD SUMMMARY DATA BY CONSTRUCTOR ---
+
+constructor_season <- master_history %>%
+  group_by(constructor_id, season) %>%
+  summarise(total_points = sum(points, na.rm = TRUE), .groups = "drop") %>%
+  arrange(season, desc(total_points)) %>%
+  group_by(season) %>%
+  mutate(constructor_ranking = row_number()) %>%
+  ungroup()
 
