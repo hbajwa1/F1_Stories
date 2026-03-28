@@ -1,9 +1,9 @@
 library(shiny)
 library(bslib)
 library(tidyverse)
-library(bsicons) # For the nice summary icons
+library(bsicons)
 
-# --- 1. MOCK DATA (To make the prototype work immediately) ---
+# --- 1. IMPORT DATA ---
 # In production, you will load "data/dashboard_ready.rds" here
 drivers_list <- c("Max Verstappen", "Lewis Hamilton", "Charles Leclerc")
 teams_list <- c("Red Bull", "Mercedes", "Ferrari", "McLaren")
