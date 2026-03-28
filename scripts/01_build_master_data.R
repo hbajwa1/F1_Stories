@@ -54,5 +54,16 @@ constructor_season <- master_history %>%
   arrange(season, desc(total_points)) %>%
   group_by(season) %>%
   mutate(constructor_ranking = row_number()) %>%
+  ungroup() %>%
+  group_by(constructor_id) %>%
+  mutate(mean_constructor_ranking = round(mean(constructor_ranking), digits = 1)) %>%
   ungroup()
+
+constructor_track <- master_history %>%
+  group_by(constructor_id, circuit_id) %>%
+  summarise(total_points = sum(points, na.rm = TRUE),
+            mean_position = round(mean(position), digits = 2),
+            .groups = "drop",) %>%
+  arrange(constructor_id, mean_position)
+
 
